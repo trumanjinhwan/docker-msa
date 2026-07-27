@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # Domain 1 (Python 기반 - "Domain 1" 텍스트 CRUD)
+  # ==========================================
+  domain1-db:
+    image: mariadb:10.11
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: domain1_db
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
+    # 포트 매핑을 하지 않아 호스트와 격리됨 (내부 3306 포트 통신)
+    volumes:
+      - ./domain1/db_data:/var/lib/mysql
+
+  domain1-backend:
+    build: ./domain1/backend
+    depends_on:
+      - domain1-db
+
+  domain1-frontend:
+    build: ./domain1/frontend
+    ports:
+      - "8081:80"  # 개발 서버 IP:8081 로 접속
+    depends_on:
+      - domain1-backend
+
+  # ==========================================
+  # Domain 2 (Node.js 기반 - 이미지 파일 업로드)
+  # ==========================================
+  domain2-db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: domain2_db
+    volumes:
+      - ./domain2/db_data:/var/lib/postgresql/data
+    # 포트 매핑을 하지 않아 호스트와 격리됨 (내부 5432 포트 통신)
+
+  domain2-backend:
+    build: ./domain2/backend
+    volumes:
+      - ./domain2/uploads:/app/uploads  # 호스트와 컨테이너 디렉터리 동기화
+    depends_on:
+      - domain2-db
+
+  domain2-frontend:
+    build: ./domain2/frontend
+    ports:
+      - "8082:80"  # 개발 서버 IP:8082 로 접속
+    depends_on:
+      - domain2-backend
+

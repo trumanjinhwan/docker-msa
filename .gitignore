@@ -1,0 +1,12 @@
+# 데이터베이스 볼륨 마운트 디렉터리
+domain1/db_data/
+domain2/db_data/
+
+# 업로드된 이미지 파일 디렉터리
+domain2/uploads/
+
+# Python 및 Node.js 불필요 파일
+__pycache__/
+*.pyc
+node_modules/
+.env
