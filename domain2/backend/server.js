@@ -77,6 +77,33 @@ app.get('/api/images', async (req, res) => {
     }
 });
 
+// [DELETE] 이미지 및 파일 삭제 API
+app.delete('/api/images/:id', async (req, res) => {
+    const id = req.params.id;
+    try {
+        // DB에서 파일명 조회
+        const result = await pool.query('SELECT * FROM images WHERE id = $1', [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: '이미지를 찾을 수 없습니다.' });
+        }
+        
+        const filename = result.rows[0].filename;
+        const filePath = `/app/uploads/${filename}`;
+        
+        // 실제 디스크에서 파일 삭제 (존재하는지 먼저 확인)
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+        
+        // DB에서 데이터 삭제
+        await pool.query('DELETE FROM images WHERE id = $1', [id]);
+        
+        res.json({ message: '이미지 및 파일 삭제 성공!' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Domain 2 API Server is running on port ${port}`);
 });

@@ -6,9 +6,16 @@
     <title>Domain 1 - Python MSA</title>
     <style>
         body { font-family: sans-serif; background-color: #f0fdf4; padding: 20px; }
-        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
         button { padding: 10px 15px; margin-right: 10px; cursor: pointer; background-color: #16a34a; color: white; border: none; border-radius: 4px;}
         button:hover { background-color: #15803d; }
+        .item-btn { padding: 4px 8px; margin-left: 5px; cursor: pointer; border: none; border-radius: 3px; font-size: 12px; }
+        .btn-edit { background-color: #ca8a04; color: white; }
+        .btn-edit:hover { background-color: #a16207; }
+        .btn-delete { background-color: #dc2626; color: white; }
+        .btn-delete:hover { background-color: #b91c1c; }
+        li { margin-bottom: 10px; list-style-type: none; display: flex; align-items: center; justify-content: space-between; padding: 8px; background: #f9fafb; border-radius: 4px; border: 1px solid #e5e7eb; }
+        ul { padding-left: 0; }
     </style>
 </head>
 <body>
@@ -25,10 +32,13 @@
     <script>
         // 백엔드 API로 데이터 생성 요청 (POST)
         async function createData() {
+            const content = prompt('추가할 내용을 입력하세요:', 'Domain 1');
+            if (content === null) return; // 취소 버튼 누름
+            
             const res = await fetch('/api/texts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: 'Domain 1' })
+                body: JSON.stringify({ content: content })
             });
             const result = await res.json();
             alert(result.message);
@@ -44,9 +54,56 @@
             
             result.data.forEach(item => {
                 const li = document.createElement('li');
-                li.textContent = `ID: ${item.id} | Content: ${item.content}`;
+                
+                const textSpan = document.createElement('span');
+                textSpan.textContent = item.content;
+                li.appendChild(textSpan);
+                
+                const btnContainer = document.createElement('div');
+                
+                const editBtn = document.createElement('button');
+                editBtn.className = 'item-btn btn-edit';
+                editBtn.textContent = '수정';
+                editBtn.onclick = () => updateData(item.id, item.content);
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'item-btn btn-delete';
+                deleteBtn.textContent = '삭제';
+                deleteBtn.onclick = () => deleteData(item.id);
+                
+                btnContainer.appendChild(editBtn);
+                btnContainer.appendChild(deleteBtn);
+                li.appendChild(btnContainer);
+                
                 list.appendChild(li);
             });
+        }
+
+        // 백엔드 API로 데이터 수정 요청 (PUT)
+        async function updateData(id, currentContent) {
+            const newContent = prompt('수정할 내용을 입력하세요:', currentContent);
+            if (newContent === null || newContent.trim() === '') return;
+            
+            const res = await fetch(`/api/texts/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: newContent })
+            });
+            const result = await res.json();
+            alert(result.message);
+            loadData();
+        }
+
+        // 백엔드 API로 데이터 삭제 요청 (DELETE)
+        async function deleteData(id) {
+            if (!confirm('정말로 삭제하시겠습니까?')) return;
+            
+            const res = await fetch(`/api/texts/${id}`, {
+                method: 'DELETE'
+            });
+            const result = await res.json();
+            alert(result.message);
+            loadData();
         }
     </script>
 </body>
